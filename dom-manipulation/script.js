@@ -143,6 +143,9 @@ document
 document.addEventListener("DOMContentLoaded", () => {
   createAddQuoteForm();
   showRandomQuote();
+  document
+    .getElementById("exportQuotes")
+    .addEventListener("click", exportToJsonFile);
 
   // Restore last viewed quote from session storage (if exists)
   const lastViewedQuote = JSON.parse(sessionStorage.getItem("lastViewedQuote"));
