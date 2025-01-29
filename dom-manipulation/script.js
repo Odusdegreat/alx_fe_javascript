@@ -66,7 +66,7 @@ function filterQuotes() {
 }
 
 // Function to add a new quote
-async function addQuote() {
+function addQuote() {
   const newQuoteText = document.getElementById("newQuoteText").value.trim();
   const newQuoteCategory = document
     .getElementById("newQuoteCategory")
@@ -82,32 +82,14 @@ async function addQuote() {
     text: newQuoteText,
     category: newQuoteCategory,
   };
-
-  // Add new quote to the local array
   quotes.push(newQuote);
+
   saveQuotes();
   populateCategories();
   filterQuotes();
 
-  // Send new quote to the server
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST", // Use POST method
-      headers: {
-        "Content-Type": "application/json", // Set Content-Type header
-      },
-      body: JSON.stringify(newQuote), // Send the new quote as JSON
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to send quote to the server.");
-    }
-
-    const data = await response.json();
-    console.log("Quote sent to server:", data);
-  } catch (error) {
-    console.error("Error sending quote to server:", error);
-  }
+  // Simulate sending new quote to server
+  syncWithServer();
 }
 
 // Function to save quotes to localStorage
@@ -176,6 +158,30 @@ async function syncWithServer() {
   }
 }
 
+// Function to fetch quotes from server (without merging)
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(API_URL);
+    const serverQuotes = await response.json();
+
+    // Convert server response to match our quote structure
+    const formattedQuotes = serverQuotes.map((q) => ({
+      id: q.id,
+      text: q.title, // Simulated text from API
+      category: "General",
+    }));
+
+    // Replace local quotes with server quotes
+    quotes = formattedQuotes;
+
+    saveQuotes();
+    populateCategories();
+    filterQuotes();
+  } catch (error) {
+    console.error("Error fetching quotes from server:", error);
+  }
+}
+
 // Function to merge local and server quotes and resolve conflicts
 function mergeQuotes(localQuotes, serverQuotes) {
   const quoteMap = new Map();
@@ -201,4 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("exportQuotes")
     .addEventListener("click", exportToJsonFile);
+  document
+    .getElementById("fetchQuotesBtn")
+    .addEventListener("click", fetchQuotesFromServer);
 });
