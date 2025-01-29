@@ -1,5 +1,5 @@
-const API_URL = "https://jsonplaceholder.typicode.com/posts"; // Simulated API Endpoint
-const SYNC_INTERVAL = 10000; // Sync every 10 seconds
+const API_URL = "https://jsonplaceholder.typicode.com/posts";
+const SYNC_INTERVAL = 10000;
 
 // Load quotes from localStorage or use default quotes
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
@@ -7,20 +7,22 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
     id: 1,
     text: "The only way to do great work is to love what you do.",
     category: "Motivation",
+    synced: true,
   },
   {
     id: 2,
     text: "Life is what happens when you're busy making other plans.",
     category: "Life",
+    synced: true,
   },
   {
     id: 3,
-    text: "You miss 100% of the shots you don’t take.",
+    text: "You miss 100% of the shots you don't take.",
     category: "Sports",
+    synced: true,
   },
 ];
 
-// Function to display a random quote
 function showRandomQuote() {
   if (quotes.length === 0) return;
   const randomIndex = Math.floor(Math.random() * quotes.length);
@@ -30,7 +32,6 @@ function showRandomQuote() {
   ).innerHTML = `<p>"${text}"</p><small>Category: ${category}</small>`;
 }
 
-// Function to populate categories dynamically
 function populateCategories() {
   const categoryFilter = document.getElementById("categoryFilter");
   categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
@@ -46,7 +47,6 @@ function populateCategories() {
   categoryFilter.value = localStorage.getItem("selectedCategory") || "all";
 }
 
-// Function to display filtered quotes
 function filterQuotes() {
   const selectedCategory = document.getElementById("categoryFilter").value;
   localStorage.setItem("selectedCategory", selectedCategory);
@@ -65,8 +65,7 @@ function filterQuotes() {
   });
 }
 
-// Function to add a new quote
-function addQuote() {
+async function addQuote() {
   const newQuoteText = document.getElementById("newQuoteText").value.trim();
   const newQuoteCategory = document
     .getElementById("newQuoteCategory")
@@ -81,23 +80,45 @@ function addQuote() {
     id: Date.now(),
     text: newQuoteText,
     category: newQuoteCategory,
+    synced: false,
   };
-  quotes.push(newQuote);
 
-  saveQuotes();
-  populateCategories();
-  filterQuotes();
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: newQuote.text,
+        body: newQuote.category,
+        userId: 1,
+      }),
+    });
 
-  // Simulate sending new quote to server
-  syncWithServer();
+    if (!response.ok) {
+      throw new Error("Failed to send quote to server");
+    }
+
+    newQuote.synced = true;
+    quotes.push(newQuote);
+    saveQuotes();
+    populateCategories();
+    filterQuotes();
+
+    // Clear input fields
+    document.getElementById("newQuoteText").value = "";
+    document.getElementById("newQuoteCategory").value = "";
+  } catch (error) {
+    console.error("Error adding quote:", error);
+    alert("Failed to add quote. Please try again.");
+  }
 }
 
-// Function to save quotes to localStorage
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
-// Function to export quotes as JSON file
 function exportToJsonFile() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
@@ -111,7 +132,6 @@ function exportToJsonFile() {
   document.body.removeChild(a);
 }
 
-// Function to import quotes from JSON file
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function (e) {
@@ -120,7 +140,7 @@ function importFromJsonFile(event) {
       if (!Array.isArray(importedQuotes))
         throw new Error("Invalid file format");
 
-      quotes.push(...importedQuotes);
+      quotes.push(...importedQuotes.map((q) => ({ ...q, synced: false })));
       saveQuotes();
       alert("Quotes imported successfully!");
 
@@ -133,20 +153,48 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// Function to sync with server (fetch and merge quotes)
 async function syncWithServer() {
   try {
-    const response = await fetch(API_URL);
+    // First, sync any unsynced quotes to server
+    const unsyncedQuotes = quotes.filter((q) => !q.synced);
+
+    const postPromises = unsyncedQuotes.map((quote) =>
+      fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: quote.text,
+          body: quote.category,
+          userId: 1,
+        }),
+      })
+    );
+
+    await Promise.all(postPromises);
+
+    // Mark all quotes as synced
+    quotes = quotes.map((q) => ({ ...q, synced: true }));
+
+    // Then fetch latest quotes from server
+    const response = await fetch(API_URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     const serverQuotes = await response.json();
 
-    // Convert server response to match our quote structure
     const formattedQuotes = serverQuotes.map((q) => ({
       id: q.id,
-      text: q.title, // Simulated text from API
-      category: "General",
+      text: q.title,
+      category: q.body || "General",
+      synced: true,
     }));
 
-    // Merge local and server quotes, avoiding duplicates
+    // Merge quotes
     const mergedQuotes = mergeQuotes(quotes, formattedQuotes);
     quotes = mergedQuotes;
 
@@ -158,22 +206,25 @@ async function syncWithServer() {
   }
 }
 
-// Function to fetch quotes from server (without merging)
 async function fetchQuotesFromServer() {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     const serverQuotes = await response.json();
 
-    // Convert server response to match our quote structure
     const formattedQuotes = serverQuotes.map((q) => ({
       id: q.id,
-      text: q.title, // Simulated text from API
-      category: "General",
+      text: q.title,
+      category: q.body || "General",
+      synced: true,
     }));
 
-    // Replace local quotes with server quotes
     quotes = formattedQuotes;
-
     saveQuotes();
     populateCategories();
     filterQuotes();
@@ -182,7 +233,6 @@ async function fetchQuotesFromServer() {
   }
 }
 
-// Function to merge local and server quotes and resolve conflicts
 function mergeQuotes(localQuotes, serverQuotes) {
   const quoteMap = new Map();
 
