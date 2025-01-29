@@ -133,7 +133,7 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// Function to sync with server (fetch new quotes)
+// Function to sync with server (fetch and merge quotes)
 async function syncWithServer() {
   try {
     const response = await fetch(API_URL);
@@ -155,6 +155,30 @@ async function syncWithServer() {
     filterQuotes();
   } catch (error) {
     console.error("Error syncing with server:", error);
+  }
+}
+
+// Function to fetch quotes from server (without merging)
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(API_URL);
+    const serverQuotes = await response.json();
+
+    // Convert server response to match our quote structure
+    const formattedQuotes = serverQuotes.map((q) => ({
+      id: q.id,
+      text: q.title, // Simulated text from API
+      category: "General",
+    }));
+
+    // Replace local quotes with server quotes
+    quotes = formattedQuotes;
+
+    saveQuotes();
+    populateCategories();
+    filterQuotes();
+  } catch (error) {
+    console.error("Error fetching quotes from server:", error);
   }
 }
 
@@ -183,4 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("exportQuotes")
     .addEventListener("click", exportToJsonFile);
+  document
+    .getElementById("fetchQuotesBtn")
+    .addEventListener("click", fetchQuotesFromServer);
 });

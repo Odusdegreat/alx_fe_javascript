@@ -8,18 +8,11 @@
   <body>
     <h1>Quote Generator</h1>
 
-    <!-- Quote Display Section -->
+    <!-- Quote Display -->
     <div id="quoteDisplay"></div>
 
     <!-- Show New Quote Button -->
-    <button id="showNewQuote" onclick="showRandomQuote()">
-      Show New Quote
-    </button>
-
-    <!-- Category Filter -->
-    <select id="categoryFilter" onchange="filterQuotes()">
-      <option value="all">All Categories</option>
-    </select>
+    <button id="showNewQuote">Show New Quote</button>
 
     <!-- Add New Quote Form -->
     <div id="formContainer">
@@ -29,21 +22,20 @@
         type="text"
         placeholder="Enter quote category"
       />
-      <button id="addQuoteBtn" onclick="addQuote()">Add Quote</button>
-    </div>
+      <button id="addQuoteBtn">Add Quote</button>
 
-    <!-- Import and Export Section -->
-    <div>
+      <!-- Import Quotes -->
       <input
         type="file"
         id="importFile"
         accept=".json"
         onchange="importFromJsonFile(event)"
       />
+
+      <!-- Export Quotes -->
       <button id="exportQuotes">Export Quotes</button>
     </div>
 
-    <!-- JavaScript File -->
     <script src="script.js"></script>
   </body>
 </html>
