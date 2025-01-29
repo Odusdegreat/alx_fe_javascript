@@ -8,7 +8,7 @@ const quotes = [
     text: "Life is what happens when you're busy making other plans.",
     category: "Life",
   },
-  { text: "You miss 100% of the shots you don't take.", category: "Sports" },
+  { text: "You miss 100% of the shots you don’t take.", category: "Sports" },
 ];
 
 // Function to display a random quote
@@ -39,9 +39,30 @@ function addQuote() {
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
 
-  // Display updated quote
+  // Update the DOM with the new quote
   showRandomQuote();
 }
 
+// Function to create the quote addition form dynamically
+function createAddQuoteForm() {
+  const formContainer = document.getElementById("quoteFormContainer");
+  formContainer.innerHTML = `
+      <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
+      <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+      <button id="addQuoteButton">Add Quote</button>
+  `;
+
+  // Attach event listener to the add quote button
+  document.getElementById("addQuoteButton").addEventListener("click", addQuote);
+}
+
 // Display an initial random quote on page load
-document.addEventListener("DOMContentLoaded", showRandomQuote);
+document.addEventListener("DOMContentLoaded", () => {
+  showRandomQuote();
+  createAddQuoteForm();
+
+  // Event listener for "Show New Quote" button
+  document
+    .getElementById("showNewQuoteButton")
+    .addEventListener("click", showRandomQuote);
+});
