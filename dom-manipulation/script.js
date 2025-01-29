@@ -125,6 +125,20 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
+// Function to display a random quote
+function showRandomQuote() {
+  if (quotes.length === 0) {
+    alert("No quotes available. Add a new quote!");
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * quotes.length); // Use Math.random()
+  const { text, category } = quotes[randomIndex];
+
+  const quoteDisplay = document.getElementById("quoteDisplay");
+  quoteDisplay.innerHTML = `<p>"${text}"</p><small>Category: ${category}</small>`;
+}
+
 // Attach event listeners on page load
 document.addEventListener("DOMContentLoaded", () => {
   populateCategories();
@@ -133,4 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("exportQuotes")
     .addEventListener("click", exportToJsonFile);
+
+  document
+    .getElementById("showRandomQuote")
+    .addEventListener("click", showRandomQuote);
 });
