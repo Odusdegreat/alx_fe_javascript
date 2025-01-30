@@ -230,7 +230,8 @@ async function syncQuotes() {
     quotes = quotes.map((quote) => ({ ...quote, synced: true }));
     saveQuotes();
 
-    alert("Quotes synced successfully!");
+    // Display the specific message
+    alert("Quotes synced with server!");
   } catch (error) {
     console.error("Error syncing quotes:", error);
     alert("Failed to sync quotes. Please try again.");
