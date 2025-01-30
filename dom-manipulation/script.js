@@ -206,6 +206,37 @@ async function syncWithServer() {
   }
 }
 
+async function syncQuotes() {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        quotes.map((quote) => ({
+          title: quote.text,
+          body: quote.category,
+          userId: 1,
+        }))
+      ),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to sync quotes with server");
+    }
+
+    // Update sync status for all quotes
+    quotes = quotes.map((quote) => ({ ...quote, synced: true }));
+    saveQuotes();
+
+    alert("Quotes synced successfully!");
+  } catch (error) {
+    console.error("Error syncing quotes:", error);
+    alert("Failed to sync quotes. Please try again.");
+  }
+}
+
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(API_URL, {
@@ -260,4 +291,5 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("fetchQuotesBtn")
     .addEventListener("click", fetchQuotesFromServer);
+  document.getElementById("syncQuotes").addEventListener("click", syncQuotes);
 });
